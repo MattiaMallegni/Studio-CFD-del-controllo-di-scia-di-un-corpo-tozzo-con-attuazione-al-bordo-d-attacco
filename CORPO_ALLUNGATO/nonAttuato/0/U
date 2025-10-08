@@ -1,0 +1,64 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  12                                    |
+|   \\  /    A nd           | Website:  www.openfoam.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0); // Campo iniziale a riposo
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform (0.4 0 0); 
+    }
+    outlet
+    {
+        type            zeroGradient; 
+    
+    }
+    topWall
+    {
+        type            symmetry; // Corretto per confine lontano/simmetria
+    }
+    bottomWall
+    {
+        type            symmetry; // Corretto per confine lontano/simmetria
+    }
+    bodyWall
+    {
+        type            fixedValue; // Condizione no-slip
+        value           uniform (0 0 0);
+    }
+    actuatorSlot_top  
+    {
+      type            fixedValue; // Condizione no-slip (SE ATTUATORE SPENTO)
+      value           uniform (0 0 0); // Cambiare se c'è attuazione attiva da t=0  
+        
+    }
+
+    actuatorSlot_bottom 
+    {
+      type            fixedValue; // Condizione no-slip (SE ATTUATORE SPENTO)
+      value           uniform (0 0 0); // Cambiare se c'è attuazione attiva da t=0
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}

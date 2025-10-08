@@ -1,0 +1,41 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  12                                    |
+|   \\  /    A nd           | Website:  www.openfoam.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType LES;
+
+LES
+{
+    LESModel        WALE; // Modello WALE
+
+    delta           cubeRootVol; // Modello per scala di filtro
+    cubeRootVolCoeffs
+    {
+        deltaCoeff      1;
+    }
+
+    // Coefficienti WALE (spesso i default vanno bene)
+    // WALECoeffs
+    // {
+    //     Ck              0.094;
+    //     Ce              1.05;
+    // }
+
+    printCoeffs     on;
+    turbulence      on;
+}
+
+// ************************************************************************* //

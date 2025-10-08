@@ -1,0 +1,118 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  12                                    |
+|   \\  /    A nd           | Website:  www.openfoam.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0); // Campo iniziale a riposo
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform (0.4 0 0); // 
+    }
+    outlet
+    {
+        type            zeroGradient; 
+    
+    }
+    topWall
+    {
+        type            symmetry; // Corretto per confine lontano/simmetria
+    }
+    bottomWall
+    {
+        type            symmetry; // Corretto per confine lontano/simmetria
+    }
+    bodyWall
+    {
+        type            fixedValue; // Condizione no-slip
+        value           uniform (0 0 0);
+    }
+    actuatorSlot_top  
+    {
+        type            uniformFixedValue; 
+
+        // 'uniformValue' normalmente conterrebbe direttamente il valore (es. 'uniformValue (0.1 0 0);').
+        // In questo caso, poiché il valore è complesso e letto da un file, 'uniformValue'
+        // diventa esso stesso un sotto-dizionario che ne definisce la modalità di ottenimento.
+        uniformValue
+        {
+            // All'interno del sotto-dizionario 'uniformValue', 'type' specifica come il valore
+            // (in questo caso un vettore velocità) deve essere determinato.
+            type            tableFile;  // 'tableFile' indica che i dati proverranno da una tabella
+                                        // contenuta in un file esterno. Questa è la chiave per
+                                        // implementare l'attuazione variabile nel tempo definita dal tuo professore.
+
+            format          csv;        // Specifica il formato del file tabella.
+                                        // 'csv' sta per "Comma Separated Values" (valori separati da virgola),
+                                        // che è il formato dei file generati dallo script Python.
+
+            nHeaderLine     1;          // Numero di righe di intestazione (header) da saltare
+                                        // all'inizio del file CSV prima di iniziare a leggere i dati.
+                                        // '1' è corretto perché lo script Python scrive una riga di
+                                        // intestazione (es. "time,Ux,Uy,Uz").
+
+            refColumn       0;          // Indice della colonna nel file CSV che contiene la variabile
+                                        // di riferimento (indipendente), che in questo caso è il TEMPO.
+                                        // L'indicizzazione delle colonne inizia da 0 (quindi 0 è la prima colonna).
+
+            componentColumns (1 2 3);   // Lista degli indici delle colonne nel file CSV che contengono
+                                        // i dati per le componenti del campo vettoriale U (velocità).
+                                        // (1 2 3) significa:
+                                        // - La componente Ux è letta dalla colonna con indice 1 (la seconda colonna).
+                                        // - La componente Uy è letta dalla colonna con indice 2 (la terza colonna).
+                                        // - La componente Uz è letta dalla colonna con indice 3 (la quarta colonna).
+
+            separator       ",";        // Il carattere usato per separare i valori all'interno di ogni riga
+                                        // del file CSV. Per un file CSV standard, questo è una virgola.
+
+            mergeSeparators no;         // Questa opzione definisce come trattare più separatori consecutivi.
+                                        // 'no' significa che ogni separatore è distinto. Per i CSV standard
+                                        // generati dallo script Python, questo va bene.
+
+            file            "actuation_data_top.csv"; // Nome del file CSV da cui leggere i dati.
+                                                      // Il percorso è relativo alla directory principale del caso
+                                                      // OpenFOAM se non diversamente specificato (es. con $CASE/).
+                                                      // Quindi, questo file deve trovarsi nella stessa cartella
+                                                      // delle directory 0/, constant/, system/.
+        }
+    }
+
+    actuatorSlot_bottom // Stessa logica e spiegazione di actuatorSlot_top, ma legge
+                        // dal file CSV specifico per lo slot inferiore.
+    {
+        type            uniformFixedValue;
+        uniformValue
+        {
+            type            tableFile;
+            format          csv;
+            nHeaderLine     1;
+            refColumn       0;
+            componentColumns (1 2 3);
+            separator       ",";
+            mergeSeparators no;
+            file            "actuation_data_bottom.csv"; // File CSV per lo slot inferiore
+        }
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}

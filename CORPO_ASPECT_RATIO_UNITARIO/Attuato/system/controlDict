@@ -1,0 +1,179 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Website:  www.openfoam.org                      |
+|   \\  /    A nd           | Version:  12                                    |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Simulazione a FASE UNICA con dt fisso
+
+application     pimpleFoam; // o foamRun -solver incompressibleFluid
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         525;         // Tempo finale simulazione
+
+// --- IMPOSTAZIONI PASSO FISSO ---
+adjustTimeStep  no;         
+deltaT          0.0005;      
+// --- IMPOSTAZIONI SCRITTURA ---
+writeControl    adjustableRunTime;
+writeInterval   0.3;         // Scrive ogni 0.3 secondi 
+purgeWrite      0;
+writeFormat     ascii;
+writePrecision  6;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;         
+
+runTimeModifiable true;
+
+// maxCo e maxDeltaT non sono usati con adjustTimeStep no
+
+functions
+{
+    // Funzione per calcolare i coefficienti di forza
+    forceCoeffs1
+    {
+        type            forceCoeffs;
+        libs            ("libforces.so");
+        writeControl    outputTime; 
+        patches         (bodyWall actuatorSlot_top actuatorSlot_bottom); // Patch su cui calcolare le forze
+        rho             rhoInf; rhoInf 1.0;      // Densità di riferimento
+        liftDir         (0 1 0);                // Direzione Lift (Y)
+        dragDir         (1 0 0);                // Direzione Drag (X)
+        pitchAxis       (0 0 1);                // Asse per momento (Z)
+        CofR            (0.5 0 0.05);           // Centro di rotazione per momento
+        magUInf         0.4;                    // Velocità di riferimento
+        lRef            1.0;                    // Lunghezza di riferimento (D)
+        Aref            0.1;                    // Area di riferimento (D*Z_thickness)
+        writeForces     true;                   // Salva forze dettagliate
+    }
+
+    // Funzione per calcolare y+
+    yPlus1
+    {
+        type            yPlus;
+        libs            ("libfieldFunctionObjects.so");
+        patches         (bodyWall actuatorSlot_top actuatorSlot_bottom); // Patch su cui calcolare y+
+        log             true;                   // Stampa min/max/avg nel log
+        executeControl  outputTime;             // Calcola quando scrivi i risultati principali
+        writeControl    outputTime;             // Scrive il campo yPlus quando scrivi i risultati principali
+    }
+
+    // Funzione per calcolare e scrivere il campo Co e loggare min/max/avg Co
+    CourantNumberField
+    {
+        type            CourantNo;
+        libs            ("libfieldFunctionObjects.so");
+        writeControl    outputTime;             // Scrive il campo Co quando scrivi i risultati principali
+        log             true;                   // Stampa min/max/avg Co nel log
+    }
+    
+    // Funzione per calcolare le medie temporali
+    fieldAverage1 
+    {
+        type            fieldAverage; 
+        libs            ("libfieldFunctionObjects.so"); 
+
+        // --- Controllo Avvio/Fine Media ---
+        startAverage    true;       // Abilita l'inizio ritardato
+        startTime       160;        // Tempo di inizio media
+
+        // --- Campi da Mediare ---
+        fields
+        (
+            U           // Campo di velocità istantaneo
+            {
+                mean        on;     // Calcola e salva UMean 
+                prime2      off;     // Calcola e salva UPrime2Mean 
+                base        time;   // Media temporale standard
+            }
+            p           // Campo di pressione istantaneo
+            {
+                mean        on;     // Calcola e salva pMean
+                prime2      off;    // Non calcolare <p'^2> 
+                base        time;
+            }
+        );
+        writeControl    outputTime; 
+    }
+
+  // in system/controlDict, dentro la sezione 'functions'
+
+    sondePunti
+    {
+        type            probes;
+        libs            ("libsampling.so");
+        writeControl    outputTime;
+        timeStart       160;
+
+        fields
+        (
+            U
+            p
+        );
+
+        interpolationScheme cellPoint;
+
+        probeLocations
+        (
+            // Linea 1 (a x=0.5) - 7 Punti
+            (0.5 -1.5 0.05)
+            (0.5 -1.0 0.05)
+            (0.5 -0.5 0.05)
+            (0.5 0.0 0.05)
+            (0.5 0.5 0.05)
+            (0.5 1.0 0.05)
+            (0.5 1.5 0.05)
+
+            // Linea 2 (a x=2.0) - 13 Punti (risoluzione aumentata)
+            (2.0 -1.5 0.05)
+            (2.0 -1.25 0.05)
+            (2.0 -1.0 0.05)
+            (2.0 -0.75 0.05)
+            (2.0 -0.5 0.05)
+            (2.0 -0.25 0.05)
+            (2.0 0.0 0.05)
+            (2.0 0.25 0.05)
+            (2.0 0.5 0.05)
+            (2.0 0.75 0.05)
+            (2.0 1.0 0.05)
+            (2.0 1.25 0.05)
+            (2.0 1.5 0.05)
+
+            // Linea 3 (a x=3.0) - 19 Punti (risoluzione massima)
+            (3.0 -1.5 0.05)
+            (3.0 -1.333 0.05)
+            (3.0 -1.167 0.05)
+            (3.0 -1.0 0.05)
+            (3.0 -0.833 0.05)
+            (3.0 -0.667 0.05)
+            (3.0 -0.5 0.05)
+            (3.0 -0.333 0.05)
+            (3.0 -0.167 0.05)
+            (3.0 0.0 0.05)
+            (3.0 0.167 0.05)
+            (3.0 0.333 0.05)
+            (3.0 0.5 0.05)
+            (3.0 0.667 0.05)
+            (3.0 0.833 0.05)
+            (3.0 1.0 0.05)
+            (3.0 1.167 0.05)
+            (3.0 1.333 0.05)
+            (3.0 1.5 0.05)
+        );
+    }
+    
+}
+// ************************************************************************* //

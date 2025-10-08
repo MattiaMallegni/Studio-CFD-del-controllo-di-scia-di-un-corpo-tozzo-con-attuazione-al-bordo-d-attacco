@@ -1,0 +1,61 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  12                                    |
+|   \\  /    A nd           | Website:  www.openfoam.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      p; // Pressione cinematica p/rho
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0; // Pressione iniziale relativa
+
+boundaryField
+{
+    inlet
+    {
+        type            zeroGradient; // Standard per p all'inlet
+    }
+    outlet
+    {
+        type            fixedValue;   // Pressione imposta (riferimento)
+        value           uniform 0;
+    }
+    topWall
+    {
+        type            symmetry;
+    }
+    bottomWall
+    {
+        type            symmetry;
+    }
+    bodyWall
+    {
+        type            zeroGradient; 
+    }
+    actuatorSlot_top  
+    {
+        type            zeroGradient; 
+    }
+
+    actuatorSlot_bottom 
+    {
+        type            zeroGradient; 
+    }
+
+    frontAndBack
+    {
+        type            empty;
+    }
+}
+
+// ************************************************************************* //
