@@ -1,0 +1,1 @@
+# Studio-CFD-del-controllo-di-scia-di-un-corpo-tozzo-con-attuazione-al-bordo-d-attacco
